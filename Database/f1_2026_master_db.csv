@@ -1,0 +1,23 @@
+Abbreviation,TeamName,qualif_pos,race_finish_pos,last_qualif_pos,EventName,RoundNumber,Year,is_race_incident,qualif_time,GapFromPole_pct,is_incident_quali,topspeed_kmh_qualif,constructor_pos,team_performance_lastgp,air_temp_forecast,track_temp_forecast,rain_proba_forecast
+RUS,Mercedes,1.0,1.0,1.0,Australian Grand Prix,1,2026,0,78.518,0.0,0,328.0,1,0,24.23,36.13,0
+ANT,Mercedes,2.0,2.0,2.0,Australian Grand Prix,1,2026,0,78.811,0.373,0,327.0,1,0,24.23,36.13,0
+LEC,Ferrari,4.0,3.0,4.0,Australian Grand Prix,1,2026,0,79.327,1.03,0,322.0,2,0,24.23,36.13,0
+HAM,Ferrari,7.0,4.0,7.0,Australian Grand Prix,1,2026,0,79.478,1.223,0,323.0,2,0,24.23,36.13,0
+NOR,McLaren,6.0,5.0,6.0,Australian Grand Prix,1,2026,0,79.475,1.219,0,323.0,3,0,24.23,36.13,0
+VER,Red Bull Racing,20.0,6.0,20.0,Australian Grand Prix,1,2026,0,83.244,6.019,1,306.0,4,0,24.23,36.13,0
+BEA,Haas F1 Team,12.0,7.0,12.0,Australian Grand Prix,1,2026,0,80.311,2.284,0,328.0,5,0,24.23,36.13,0
+LIN,Racing Bulls,9.0,8.0,9.0,Australian Grand Prix,1,2026,0,79.971,1.851,0,333.0,6,0,24.23,36.13,0
+BOR,Audi,10.0,9.0,10.0,Australian Grand Prix,1,2026,0,80.221,2.169,0,329.0,7,0,24.23,36.13,0
+GAS,Alpine,14.0,10.0,14.0,Australian Grand Prix,1,2026,0,80.501,2.526,0,325.0,8,0,24.23,36.13,0
+OCO,Haas F1 Team,13.0,11.0,13.0,Australian Grand Prix,1,2026,0,80.491,2.513,0,326.0,5,0,24.23,36.13,0
+ALB,Williams,15.0,12.0,15.0,Australian Grand Prix,1,2026,0,80.941,3.086,0,323.0,11,0,24.23,36.13,0
+LAW,Racing Bulls,8.0,13.0,8.0,Australian Grand Prix,1,2026,0,79.994,1.88,0,329.0,6,0,24.23,36.13,0
+COL,Alpine,16.0,14.0,16.0,Australian Grand Prix,1,2026,0,81.2,3.416,0,325.0,8,0,24.23,36.13,0
+SAI,Williams,21.0,15.0,21.0,Australian Grand Prix,1,2026,0,83.244,6.019,1,0.0,11,0,24.23,36.13,0
+PER,Cadillac,18.0,16.0,18.0,Australian Grand Prix,1,2026,0,82.605,5.205,0,321.0,10,0,24.23,36.13,0
+STR,Aston Martin,22.0,17.0,22.0,Australian Grand Prix,1,2026,0,83.244,6.019,1,0.0,9,0,24.23,36.13,0
+ALO,Aston Martin,17.0,18.0,17.0,Australian Grand Prix,1,2026,1,81.969,4.395,0,316.0,9,0,24.23,36.13,0
+BOT,Cadillac,19.0,19.0,19.0,Australian Grand Prix,1,2026,1,83.244,6.019,0,321.0,10,0,24.23,36.13,0
+HAD,Red Bull Racing,3.0,20.0,3.0,Australian Grand Prix,1,2026,1,79.303,1.0,0,327.0,4,0,24.23,36.13,0
+PIA,McLaren,5.0,21.0,5.0,Australian Grand Prix,1,2026,1,79.38,1.098,0,324.0,3,0,24.23,36.13,0
+HUL,Audi,11.0,22.0,11.0,Australian Grand Prix,1,2026,1,80.303,2.273,0,331.0,7,0,24.23,36.13,0
