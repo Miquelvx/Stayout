@@ -1,0 +1,4 @@
+------------- Mean Absolute Error (MAE) -------------
+Comparaison position prédite avec position réelle.
+
+Round 2 | MAE_Rank: 3.64 | MAE_Raw: 3.96 | Win_Prediction: True

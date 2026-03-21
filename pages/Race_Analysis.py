@@ -16,10 +16,6 @@ from Code.fonctions_create_plot import create_lap_chart
 
 st.set_page_config(page_title="StayOut - Race Analysis", layout="wide")
 
-# ----------------------------
-# CONFIG FASTF1 CACHE
-# ----------------------------
-
 
 # ----------------------------
 # MAIN RACE ANALYSIS PAGE

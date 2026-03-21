@@ -16,11 +16,10 @@ from Code.constants import TEAM_COLORS
 # ----------------------------
 # CONFIG
 # ----------------------------
+st.set_page_config(page_title="StayOut - Telemetry", layout="wide")
+
 
 def main():
-    st.set_page_config(page_title="StayOut - Telemetry", layout="wide")
-    
-
     if 'actual_year' in st.session_state:
         actual_year = st.session_state['actual_year']
 

@@ -87,6 +87,7 @@ def main():
     actual_year = now.year
     st.session_state['actual_year'] = actual_year
     actual_date = pd.to_datetime(now.strftime("%Y-%m-%d, %H:%M:%S"))
+    st.session_state['actual_date'] = actual_date
 
     df_calendar = get_calendar(actual_year)
     st.session_state['df_calendar{actual_year}'] = df_calendar

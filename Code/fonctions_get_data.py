@@ -26,8 +26,6 @@ def get_calendar(year):
         
         for col in sessions_cols:
             df_calendar[col] = (pd.to_datetime(df_calendar[col], utc=True).dt.tz_convert("Europe/Paris")).dt.tz_localize(None)
-        
-
     return df_calendar
 
 def get_race_session(year, round_num):
