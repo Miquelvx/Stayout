@@ -99,7 +99,8 @@ def main():
         next_event = df_calendar.loc[next_index]
 
         # Calcul countdown prochaine course
-        delta = next_event['Session5DateUtc'] - actual_date 
+        delta = next_event['Session5DateUtc'] - actual_date
+        st.session_state['delta'] = delta 
         jours = delta.days
         heures = delta.seconds // 3600
         nom_gp = next_event['EventName'].upper()

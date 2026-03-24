@@ -33,28 +33,6 @@ CIRCUITS_GPS = {
     'Spanish Grand Prix': {'lat': 40.4657, 'lon': -3.6167},
 }
 
-def get_calendar(year):
-    calendar = fastf1.get_event_schedule(year)
-    
-    df_calendar = calendar.copy()
-
-    colonnes = [
-        'RoundNumber','Country','Location','EventDate','EventName',
-        'EventFormat','Session1','Session1DateUtc','Session2',
-        'Session2DateUtc','Session3','Session3DateUtc','Session4',
-        'Session4DateUtc','Session5','Session5DateUtc'
-    ]
-    
-    df_calendar = df_calendar[colonnes]
-
-    sessions_cols = ['Session1DateUtc', 'Session2DateUtc', 'Session3DateUtc','Session4DateUtc', 'Session5DateUtc']
-    
-    df_calendar['EventDate'] = pd.to_datetime(df_calendar['EventDate'])
-    
-    for col in sessions_cols:
-        df_calendar[col] = (pd.to_datetime(df_calendar[col], utc=True).dt.tz_convert("Europe/Paris")).dt.tz_localize(None)
-    return df_calendar
-
 # Fonction récupération classement écurie
 def get_constructor_standings(session):
     results = session.results
