@@ -8,6 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from Code.constants import CIRCUITS_GPS
 
+api_key = st.secrets["api_keys"]["openweathermap"]
 
 if 'constructors_df' in st.session_state:
     constructors_df = st.session_state['constructors_df']
@@ -114,7 +115,7 @@ def initialize_feature_df_race(year, round_number):
     ## Récupération des données météo
     print(df_feature)
     coords = CIRCUITS_GPS.get(df_feature['EventName'].iloc[0], {'lat': 0, 'lon': 0})
-    air_temp, track_temp, rain_proba = get_weather_data_after_race(session_race, '269bcb30d5d1bb07e3ac4db22b37c58c',coords)
+    air_temp, track_temp, rain_proba = get_weather_data_after_race(session_race, api_key, coords)
 
     # 3. Traitement des données de qualifications
     laps_qualif = session_qualif.laps
@@ -198,7 +199,7 @@ def initialize_feature_df_qualif(year, round_number):
 
     ## Récupération des données météo
     coords = CIRCUITS_GPS.get(df_feature['EventName'].iloc[0], {'lat': 0, 'lon': 0})
-    air_temp, track_temp, rain_proba = get_weather_data_after_qualif(session_qualif, '269bcb30d5d1bb07e3ac4db22b37c58c',coords)
+    air_temp, track_temp, rain_proba = get_weather_data_after_qualif(session_qualif, api_key, coords)
 
     # 3. Traitement des données de qualifications
     laps_qualif = session_qualif.laps

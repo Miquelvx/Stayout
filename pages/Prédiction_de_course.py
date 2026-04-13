@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -7,7 +6,8 @@ import plotly.express as px
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error
 
-from Code.fonctions_predictions import initialize_feature_df_race, initialize_feature_df_qualif, calculate_podium_proba, save_to_master_db, encoding_label
+from Code.fonctions_predictions import initialize_feature_df_race, initialize_feature_df_qualif, calculate_podium_proba, encoding_label
+from Code.fonctions_google_sheet import sheet_exists, read_sheet, save_to_master_db_sheet, save_prediction_sheet, read_prediction_sheet, prediction_exists, save_importance_sheet, read_importance_sheet, importance_exists, log_accuracy_sheet
 
 # ----------------------------
 # CONFIG
@@ -17,6 +17,7 @@ st.set_page_config(page_title="StayOut - Prédiction de course", layout="wide")
 
 if 'actual_date' in st.session_state:
     actual_date = st.session_state['actual_date']
+    #actual_date = pd.to_datetime("2026-03-18 12:00:00")
 
 if 'actual_year' in st.session_state:
     actual_year = st.session_state['actual_year']
@@ -149,27 +150,12 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    db_path = './Database/f1_2026_master_db.csv'
-
-    # Sécurité dossier Database
-    if not os.path.exists('./Database'):
-        os.makedirs('./Database')
-
-    # Sécurité dossier Predictions
-    if not os.path.exists('./Database/Predictions'):
-        os.makedirs('./Database/Predictions')
-
-    if not os.path.exists(db_path):
-        # Initialisation données premier GP
-        print(" Première initialisation : Création du Master DB...")
+    # --- SECURITE GOOGLE SHEETS ---
+    if sheet_exists("f1_2026_master_db", "f1_2026_master_db"):
+        df_master = read_sheet("f1_2026_master_db", "f1_2026_master_db")
+    else:
         df_master = initialize_feature_df_race(2026, 1)
-
-        # Sauvegarde dataframe dans CSV
-        save_to_master_db(df_master, db_path)
-    else : 
-        # Lecture CSV données origine
-        print(" Database trouvée. Chargement de l'historique...")
-        df_master = pd.read_csv(db_path)
+        save_to_master_db_sheet(df_master)
 
     futur_events = df_calendar[df_calendar['Session5DateUtc'] > actual_date]
     past_events = df_calendar[df_calendar['Session5DateUtc'] < actual_date]
@@ -194,8 +180,7 @@ def main():
             """, unsafe_allow_html=True)
             st.markdown("---")
 
-            file_path = f"./Database/Predictions/prediction_R{next_event['RoundNumber']}_2026.csv"
-            if not os.path.exists(file_path):
+            if not prediction_exists(next_event['RoundNumber'], 2026):
                 # --- 1. Initialiser les données du GP actuel pour la prédiction ---
                 df_next_gp = initialize_feature_df_qualif(2026, next_event['RoundNumber'])
 
@@ -259,10 +244,9 @@ def main():
 
                 round_num = df_next_gp['RoundNumber'].iloc[0]
                 year = df_next_gp['Year'].iloc[0]
-                filename = f"./Database/Predictions/prediction_R{round_num}_{year}.csv"
 
                 # --- 9. Sauvegarde dataframe en CSV ---
-                results.to_csv(filename, index_label='Predicted_Rank')
+                save_prediction_sheet(results, round_num, year)
 
                 # Récupération des données importantes
                 importances = model.feature_importances_
@@ -272,9 +256,10 @@ def main():
                     'Feature': [features[i] for i in indices],
                     'Importance': importances[indices]
                 })
-                df_importance.to_csv(f"./Database/Predictions/features_importantes/importance_R{round_num}_2026.csv", index=False)
+                save_importance_sheet(df_importance, round_num, year)
             else: 
-                results = pd.read_csv(file_path)
+                results = read_prediction_sheet(next_event['RoundNumber'], 2026)
+                df_importance = read_importance_sheet(next_event['RoundNumber'], 2026)
 
             # HTML Affichage Tableau
             html_table = '<table class="f1-table">'
@@ -307,8 +292,6 @@ def main():
             
             # Affichage du tableau final
             st.markdown(html_table, unsafe_allow_html=True)
-
-            df_importance = pd.read_csv(f"./Database/Predictions/features_importantes/importance_R{next_event['RoundNumber']}_2026.csv")
 
             # Graphique plotly pour affichage
             fig = px.bar(
@@ -345,7 +328,7 @@ def main():
                 mapping_last_quali = df_master[df_master['RoundNumber'] == last_event['RoundNumber']-1].set_index('Abbreviation')['qualif_pos'].to_dict()
                 df_last_gp['last_qualif_pos'] = df_last_gp['Abbreviation'].map(mapping_last_quali)
 
-                save_to_master_db(df_last_gp, db_path)
+                save_to_master_db_sheet(df_last_gp)
 
             st.markdown("---")
             # Compte à rebours next GP
@@ -365,8 +348,9 @@ def main():
             print(f"Les qualification du {next_event['EventName']} ne sont pas encore passées.")
 
             # --- 1. Préparation des données de comparaison ---
+            df_master = read_sheet("f1_2026_master_db", "f1_2026_master_db")
             last_round = next_event['RoundNumber'] - 1
-            df_last_prediction = pd.read_csv(f"./Database/Predictions/prediction_R{last_round}_{2026}.csv")
+            df_last_prediction = read_prediction_sheet(last_round, 2026)
 
             # Récupération des vrais résultats dans le Master
             df_actual = df_master[df_master['RoundNumber'] == last_round][['Abbreviation', 'race_finish_pos']]
@@ -382,22 +366,9 @@ def main():
             mae_raw = mean_absolute_error(df_compare['race_finish_pos'], df_compare['predicted_pos'])
 
             # --- 3. Sécurité et enregistrement dans le log ---
-            log_file = './Database/Predictions/accuracy_log.txt'
             top1_check = df_compare.iloc[0]['Predicted_Rank'] == 1.0
-            log_entry = f"Round {last_round} | MAE_Rank: {mae_rank:.2f} | MAE_Raw: {mae_raw:.2f} | Win_Prediction: {top1_check}\n"
 
-            already_logged = False
-            if os.path.exists(log_file):
-                with open(log_file, 'r') as f:
-                    if f"Round {last_round} |" in f.read():
-                        already_logged = True
-
-            if not already_logged:
-                with open(log_file, 'a') as f:
-                    f.write(log_entry)
-                print(f"✅ Analyse Round {last_round} terminée.")
-            else:
-                print(f"⚠️ Stats du Round {last_round} déjà présentes. Log ignoré.")
+            log_accuracy_sheet(last_round, mae_rank, mae_raw, top1_check)
 
             # --- 4. Affichage des résultats ---
             # Affichage des métriques MAE
@@ -417,7 +388,7 @@ def main():
 
             st.markdown("---")
 
-            st.subheader(f"🏁 Prédiction VS Réalité : Round {last_round}")
+            st.subheader(f"🏁 Prédiction VS Réalité : {last_event['EventName']}")
 
             # HTML Affichage Tableau
             html_table = '<table class="f1-table">'

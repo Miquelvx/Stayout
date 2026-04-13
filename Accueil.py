@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import os
 import time
+import tempfile
 
 from Code.fonctions_cache_data import get_cache_size, clear_cache_data
 from Code.fonctions_get_data import get_calendar, get_current_standings
@@ -16,9 +17,9 @@ from Code.constants import DRAPEAUX
 
 st.set_page_config(page_title="StayOut - Accueil", layout="wide")
 
-if not os.path.exists('f1_cache'):
-    os.makedirs('f1_cache')
-fastf1.Cache.enable_cache('f1_cache')
+cache_dir = os.path.join(tempfile.gettempdir(), "fastf1_cache")
+os.makedirs(cache_dir, exist_ok=True)
+fastf1.Cache.enable_cache(cache_dir)
 
 st.title("🏎️ StayOut - Dashboard F1")
 
@@ -61,10 +62,9 @@ st.markdown("""
 # ----------------------------
 def main():
     with st.sidebar:
-        st.divider()
         st.subheader("⚙️ Gestion du Cache")
 
-        cache_path = './f1_cache'
+        cache_path = os.path.join(tempfile.gettempdir(), "fastf1_cache")
 
         if os.path.exists(cache_path):
             size = get_cache_size(cache_path)
