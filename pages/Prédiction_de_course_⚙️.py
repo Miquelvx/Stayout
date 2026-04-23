@@ -1,3 +1,8 @@
+### ======== STAYOUT - Prediction ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -14,7 +19,7 @@ from Code.fonctions_generate_pdf import generate_comparison_pdf, generate_predic
 # CONFIG
 # ----------------------------
 
-st.set_page_config(page_title="StayOut - Prédiction de course", layout="wide")
+st.set_page_config(page_title="Stayout - Prédiction de course", layout="wide")
 
 if 'actual_date' in st.session_state:
     actual_date = st.session_state['actual_date']
@@ -97,17 +102,16 @@ def main():
 
     st.markdown(""" *Objectif : Exploiter les données de la nouvelle réglementation F1 2026 pour anticiper la hiérarchie des Grands Prix.* """)
 
-    # --- KPI / SOURCES (Petit bandeau) ---
+    # --- SOURCES ---
     col_a, col_b = st.columns(2)
     with col_a:
         st.caption("📂 **Données F1 :** FastF1 API")
     with col_b:
         st.caption("☁️ **Météo :** OpenWeatherMap API")
 
-    # --- SECTION : DICTIONNAIRE DES DONNÉES ---
+    # --- DICTIONNAIRE DES DONNÉES ---
     with st.expander("📊 Architecture des Données"):
 
-        # Utilisation de colonnes pour ne pas avoir une liste trop longue
         col1, col2 = st.columns(2)
 
         with col1:
@@ -144,7 +148,7 @@ def main():
             - **`rain_proba_forecast`** : Probabilité de précipitations.
             """)
 
-    # --- FOOTER / FOCUS TECHNIQUE ---
+    # --- FOCUS TECHNIQUE ---
     st.markdown("""
         <div style="background-color: transparent; border: 1px solid #4b4b4b; padding: 10px; border-radius: 5px; font-size: 1em;">
             Le <strong>GapFromPole_pct</strong> est crucial : chaque circuit ayant une longueur différente, un écart de 1 seconde à Spa n'a pas la même valeur qu'à Monaco. Le pourcentage permet de normaliser cette performance sur toute la saison.
@@ -200,7 +204,7 @@ def main():
                     'air_temp_forecast', 'track_temp_forecast', 'rain_proba_forecast'
                 ]
 
-                # On entraîne sur l'historique (en filtrant les abandons techniques pour plus de pureté)
+                # On entraîne sur l'historique (en filtrant les abandons techniques)
                 train_set = df_master[df_master['is_race_incident'] == 0]
 
                 X_train = train_set[features].copy()
@@ -303,7 +307,7 @@ def main():
                 title='⚙️ FACTEURS DÉCISIFS DU MODÈLE ⚙️',
                 labels={'Importance': 'Poids dans la décision', 'Feature': 'Variable'},
                 color='Importance',
-                color_continuous_scale='Reds' # Dégradé rouge F1
+                color_continuous_scale='Reds'
             )
             fig.update_layout(
                 plot_bgcolor='rgba(0,0,0,0)',
@@ -334,16 +338,16 @@ def main():
                 file_name=f"StayOut_Prediction_PRE_R{int(next_event['RoundNumber'])}_2026.pdf",
                 mime="application/pdf",
                 use_container_width=True
-)
+            )       
 
         # Cas 2 : Date après le Grand Prix -> récupération des résultats et comparaison
         elif actual_date < next_event['Session4DateUtc']:
             
             if df_master['RoundNumber'].max() != last_event['RoundNumber']:
-                # 2. Initialiser les données du GP passé
+                # 1. Initialiser les données du GP passé
                 df_last_gp = initialize_feature_df_race(2026, last_event['RoundNumber'])
 
-                # 3. Récupérer le momentum (last_qualif_pos) du GP précédent
+                # 2. Récupérer le momentum (last_qualif_pos) du GP précédent
                 mapping_last_quali = df_master[df_master['RoundNumber'] == last_event['RoundNumber']-1].set_index('Abbreviation')['qualif_pos'].to_dict()
                 df_last_gp['last_qualif_pos'] = df_last_gp['Abbreviation'].map(mapping_last_quali)
 
@@ -366,7 +370,7 @@ def main():
 
             print(f"Les qualification du {next_event['EventName']} ne sont pas encore passées.")
 
-            # --- 1. Préparation des données de comparaison ---
+            # --- 3. Préparation des données de comparaison ---
             df_master = read_sheet("f1_2026_master_db", "f1_2026_master_db")
             last_round = next_event['RoundNumber'] - 1
             df_last_prediction = read_prediction_sheet(last_round, 2026)
@@ -377,19 +381,19 @@ def main():
             df_compare = pd.merge(df_last_prediction, df_actual, left_on='Driver', right_on='Abbreviation')
             df_compare = df_compare.sort_values(by='race_finish_pos').reset_index(drop=True)
 
-            # --- 2. Calcul des deux métriques ---
+            # --- 4. Calcul des deux métriques ---
             # MAE sur le rang final -> Performance "Sportive"
             mae_rank = mean_absolute_error(df_compare['race_finish_pos'], df_compare['Predicted_Rank'])
 
             # MAE sur la valeur brute -> Précision du "Cerveau"
             mae_raw = mean_absolute_error(df_compare['race_finish_pos'], df_compare['predicted_pos'])
 
-            # --- 3. Sécurité et enregistrement dans le log ---
+            # --- 5. Sécurité et enregistrement dans le log ---
             top1_check = df_compare.iloc[0]['Predicted_Rank'] == 1.0
 
             log_accuracy_sheet(last_round, mae_rank, mae_raw, top1_check)
 
-            # --- 4. Affichage des résultats ---
+            # --- 6. Affichage des résultats ---
             # Affichage des métriques MAE
             col1, col2, col3 = st.columns(3)
 

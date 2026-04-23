@@ -1,3 +1,8 @@
+### ======== STAYOUT - Race Analysis ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import streamlit as st
 import fastf1
 import pandas as pd
@@ -9,12 +14,13 @@ import plotly.graph_objects as go
 
 from Code.fonctions_get_data import get_calendar,get_race_session, calculate_race_metrics
 from Code.fonctions_create_plot import create_lap_chart
+from Code.constants import DRAPEAUX_EMOJI
 
 # ----------------------------
 # CONFIG
 # ----------------------------
 
-st.set_page_config(page_title="StayOut - Analyse de course", layout="wide")
+st.set_page_config(page_title="Stayout - Analyse de course", layout="wide")
 
 
 # ----------------------------
@@ -39,7 +45,6 @@ def main():
         actual_year = st.session_state['actual_year']
 
         # --- SIDEBAR ---
-
         with st.sidebar:
             st.markdown ("Filtre ⚙️")
 
@@ -55,9 +60,12 @@ def main():
             else:
                 df_calendar = get_calendar(annee)
 
-            df_gp_only = df_calendar[df_calendar['EventName'].str.contains('Grand Prix', na=False)]
-            grand_prix = st.selectbox("Selectionner le grand prix 🏆", df_gp_only['EventName'])
-            selected_gp_row = df_gp_only[df_gp_only['EventName'] == grand_prix].iloc[0]
+            df_gp_only = df_calendar[df_calendar['EventName'].str.contains('Grand Prix', na=False)].copy()
+            df_gp_only['EventNameWithFlag'] = df_gp_only.apply(
+                lambda row: f"{DRAPEAUX_EMOJI.get(row['Country'], '🏁')} {row['EventName']}", axis=1
+            )
+            grand_prix = st.selectbox("Selectionner le grand prix 🏆", df_gp_only['EventNameWithFlag'])
+            selected_gp_row = df_gp_only[df_gp_only['EventNameWithFlag'] == grand_prix].iloc[0]
             round_number = selected_gp_row['RoundNumber']
 
         session = get_race_session(annee, round_number)
@@ -112,15 +120,11 @@ def main():
             col1, col2, col3 = st.columns(3)
             col1.metric("Total Dépassements", f" {total_ov}")
             col2.metric("Abandons (DNF)", f"❌ {dnfs}")
-            # Ici, le nom du pilote s'affichera proprement car la carte a une hauteur fixe
             col3.metric("Roi du dépassement", top_ov['Driver'], f"🔥 {top_ov['Overtakes']} fois")
-
         else:
             st.info("La course n'a pas encore eu lieu")
-    
     else :
         st.warning("Veuillez repasser par la page d'accueil")
-
 
 if __name__ == "__main__":
     main()

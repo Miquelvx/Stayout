@@ -1,9 +1,15 @@
+### ======== STAYOUT - Fonctions Cache Data ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import os
 import re
 import stat
 import shutil
 import streamlit as st
 
+# Récupération taille cache
 def get_cache_size(path='.'):
     total_size = 0
     try:
@@ -16,11 +22,10 @@ def get_cache_size(path='.'):
         return 0
     return total_size / (1024 * 1024)
 
-
+# Clear cache files
 def clear_cache_data(cache_path='./f1_cache'):
     if not os.path.exists(cache_path):
         return False
-
     success_count = 0
     year_pattern = re.compile(r"^\d{4}$")
 
@@ -40,6 +45,7 @@ def clear_cache_data(cache_path='./f1_cache'):
         st.error(f"Erreur lors du parcours du cache : {e}")
         return False
 
+# Clear files readonly
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)

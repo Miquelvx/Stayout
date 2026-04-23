@@ -1,3 +1,8 @@
+### ======== STAYOUT - Fonctions Prédicitons ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import os
 import fastf1
 import requests
@@ -16,9 +21,7 @@ if 'constructors_df' in st.session_state:
 # Fonction récupération classement écurie
 def get_constructor_standings(session):
     results = session.results
-    # On groupe par équipe et on somme les points
-    team_points = results.groupby('TeamName')['Points'].sum().sort_values(ascending=False)
-    
+    team_points = results.groupby('TeamName')['Points'].sum().sort_values(ascending=False) 
     standings = {team: pos + 1 for pos, team in enumerate(team_points.index)}
     return standings
 
@@ -60,7 +63,7 @@ def get_weather_forecast(lat, lon, api_key, session_date):
         print(f"Erreur API Forecast : {e}")
         return 20.0, 30.0, 0
 
-# Fonction récupération données météo en fonction du gp
+# Fonction récupération données météo
 def get_weather_data_after_race(session, api_key=None, coords=None):
     # Si la session est à venir -> récupération météo future API
     try:
@@ -77,14 +80,12 @@ def get_weather_data_after_race(session, api_key=None, coords=None):
         int(weather['Rainfall'].any())
     )
     
-# Fonction récupération données météo en fonction du gp
+# Fonction récupération données météo
 def get_weather_data_after_qualif(session, api_key=None, coords=None):
     print("Récupération prévisions via API (Futur)...")
-    # Note : utilisez session.date uniquement après le .load()
     return get_weather_forecast(coords['lat'], coords['lon'], api_key, session.date)
 
-    
-# Fonction initialisation dataframe
+# Fonction initialisation dataframe course
 def initialize_feature_df_race(year, round_number):
     # 1. Chargement des sessions
     session_race = fastf1.get_session(year, round_number, 'R')
@@ -172,10 +173,10 @@ def initialize_feature_df_race(year, round_number):
 
     return df_feature
 
+# Fonction initialisation dataframe qualifs
 def initialize_feature_df_qualif(year, round_number):
     # 1. Chargement des sessions
     session_qualif = fastf1.get_session(year, round_number, 'Q')
-
     session_qualif.load(laps=True, telemetry=True, weather=True, messages=False)
     
     # 2. Récupération des résultats de course
@@ -256,13 +257,10 @@ def initialize_feature_df_qualif(year, round_number):
 
     return df_feature
 
-# 
+# Fonction calcul probabilité podium
 def calculate_podium_proba(pos):
-        # Formule mathématique pour convertir la position en probabilité (0 à 100)
-        # On centre la chute de probabilité autour de la 3.5ème place
         proba = 1 / (1 + np.exp((pos - 3.5) * 2))
         return round(proba * 100, 1)
-
 
 # Fonction save dataframe into csv
 def save_to_master_db(df_new, db_path):
@@ -270,14 +268,10 @@ def save_to_master_db(df_new, db_path):
         df_new.to_csv(db_path, index=False)
         print(f"📁 Master DB créé avec le Round {df_new['RoundNumber'].iloc[0]}.")
         return
-
     df_old = pd.read_csv(db_path)
     current_round = df_new['RoundNumber'].iloc[0]
     current_year = df_new['Year'].iloc[0]
-    
-    is_already_present = ((df_old['RoundNumber'] == current_round) & 
-                          (df_old['Year'] == current_year)).any()
-    
+    is_already_present = ((df_old['RoundNumber'] == current_round) & (df_old['Year'] == current_year)).any()
     if not is_already_present:
         df_combined = pd.concat([df_old, df_new], ignore_index=True)
         df_combined.to_csv(db_path, index=False)
@@ -285,23 +279,20 @@ def save_to_master_db(df_new, db_path):
     else:
         print(f"ℹ️ Le GP {current_round} ({current_year}) est déjà dans la base. Pas d'ajout.")
 
+# Fonction encoding label
 def encoding_label(df_master, df_next_gp):
     df_combined = pd.concat([df_master, df_next_gp], ignore_index=True)
-    
-    # 3. Encoder sur la base du combiné
+
     encoders = {}
     cols_to_encode = ['Abbreviation', 'TeamName', 'EventName']
 
     for col in cols_to_encode:
         le = LabelEncoder()
-        # On 'fit' sur TOUTES les valeurs possibles
         le.fit(df_combined[col].astype(str)) 
         
-        # On 'transform' séparément les deux DataFrames
         df_master[col] = le.transform(df_master[col].astype(str))
         df_next_gp[col] = le.transform(df_next_gp[col].astype(str))
         
-        # On garde l'encodeur en mémoire
+        # Encodeur en mémoire
         encoders[col] = le
-    
     return df_master, df_next_gp, encoders

@@ -1,3 +1,9 @@
+### ======== STAYOUT - Main page ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
+
 import streamlit as st
 import fastf1
 import pandas as pd
@@ -5,29 +11,45 @@ from datetime import datetime
 import os
 import time
 import tempfile
+import base64
 
 from Code.fonctions_cache_data import get_cache_size, clear_cache_data
-from Code.fonctions_get_data import get_calendar, get_current_standings
+from Code.fonctions_get_data import get_calendar, get_current_standings, get_flag_emoji
 from Code.fonctions_create_plot import display_f1_progress_bar, display_f1_standings
-from Code.constants import DRAPEAUX
 
 # ----------------------------
 # CONFIG
 # ----------------------------
 
-st.set_page_config(page_title="StayOut - Accueil", layout="wide")
+st.set_page_config(page_title="Stayout - Accueil", layout="wide")
 
 cache_dir = os.path.join(tempfile.gettempdir(), "fastf1_cache")
 os.makedirs(cache_dir, exist_ok=True)
 fastf1.Cache.enable_cache(cache_dir)
 
-st.title("🏎️ StayOut - Dashboard F1")
+# --- LOGO + TITRE ---
+col1, col2, col3 = st.columns([1, 1, 1])
+with col2:
+    with open("./assets/Logo_StayoutB.png", "rb") as f:
+        logo_base64 = base64.b64encode(f.read()).decode()
+    st.markdown(f'<div style="display: flex; justify-content: center;"><img src="data:image/png;base64,{logo_base64}" width="560" height="350"></div>', unsafe_allow_html=True)
+    st.markdown("""
+        <p style="
+            text-align: center;
+            color: #888888;
+            font-size: 0.95em;
+            font-family: 'Titillium Web', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: -10px;
+        ">
+            Formula 1 Analytics & Predictions
+        </p>
+    """, unsafe_allow_html=True)
 
-# ----------------------------
-# DATA FETCHING
-# ----------------------------
+st.markdown("<hr style='border: 1px solid #e10600; margin: 10px 0 25px 0;'>", unsafe_allow_html=True)
 
-# --- 2. STYLE CSS POUR LA DA F1 ---
+# --- STYLE CSS F1 ---
 st.markdown("""
     <style>
     .f1-container {
@@ -103,8 +125,7 @@ def main():
         heures = delta.seconds // 3600
         nom_gp = next_event['EventName'].upper()
         pays_lieu = f"ROUND {next_event['RoundNumber']} • {next_event['Country']} • {next_event['Location']}"
-        iso_code = DRAPEAUX.get(next_event['Country'], "un")  
-        url_drapeau = f"https://flagcdn.com/h40/{iso_code}.png"
+        url_drapeau = get_flag_emoji(next_event['Country'])
 
         sessions_html = ""
         icones = {"Practice 1": "FP1", "Practice 2": "FP2", "Practice 3": "FP3", "Qualifying": "QUAL", "Sprint Qualifying": "SQUAL", "Sprint": "SPRINT", "Race": "RACE"}
@@ -112,7 +133,6 @@ def main():
         for i in range(1, 6):
             s_name = next_event[f'Session{i}']
             s_date = next_event[f'Session{i}DateUtc'].strftime('%H:%M')
-            # On détermine si c'est la course pour mettre un badge rouge
             badge_color = "#FF1801" if i == 5 else "#38383f"
             label_short = icones.get(s_name, s_name[:4].upper())
             

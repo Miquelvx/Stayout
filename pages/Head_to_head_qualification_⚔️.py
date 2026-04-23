@@ -1,3 +1,8 @@
+### ======== STAYOUT - Head to Head ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import streamlit as st
 import fastf1
 import pandas as pd
@@ -16,11 +21,11 @@ from Code.constants import TEAM_COLORS
 # ----------------------------
 # CONFIG
 # ----------------------------
-st.set_page_config(page_title="StayOut - Telemetry", layout="wide")
+st.set_page_config(page_title="Stayout - Telemetry", layout="wide")
 
 
 def main():
-    st.title("Analyse des télémétries en qualifications 📊")
+    st.title("Head to head - Qualifications 📊")
 
     st.markdown("#### ⚔️ Duel entre pilotes : Analyse de la performance sportive")
     st.markdown("Cette page analyse l'intégralité des télémétries des pilotes durant les qualifications des Grand Prix :")
@@ -35,6 +40,7 @@ def main():
     if 'actual_year' in st.session_state:
         actual_year = st.session_state['actual_year']
 
+        # --- SIDEBAR ---
         with st.sidebar:
             st.markdown ("Filtre ⚙️")
 
@@ -68,7 +74,7 @@ def main():
             selected_drivers = st.multiselect(
                 "Choisir les pilotes à comparer 🏎️",
                 options=available_drivers_formatted,
-                default=available_drivers_formatted[:1]
+                default=available_drivers_formatted[:2]
             )
 
         if not session.results.empty:

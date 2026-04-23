@@ -1,3 +1,6 @@
+### ======== STAYOUT - Constant ======== ### 
+
+# Drapeaux code ISO
 DRAPEAUX = {
     "Bahrain": "bh", 
     "Saudi Arabia": "sa", 
@@ -24,6 +27,18 @@ DRAPEAUX = {
     "France": "fr"
 }
 
+# Drapeaux code emoji
+DRAPEAUX_EMOJI = {
+    "Bahrain": "🇧🇭", "Saudi Arabia": "🇸🇦", "Australia": "🇦🇺",
+    "Japan": "🇯🇵", "China": "🇨🇳", "USA": "🇺🇸", "United States": "🇺🇸",
+    "Monaco": "🇲🇨", "Spain": "🇪🇸", "Canada": "🇨🇦", "Austria": "🇦🇹",
+    "United Kingdom": "🇬🇧", "Hungary": "🇭🇺", "Belgium": "🇧🇪",
+    "Netherlands": "🇳🇱", "Italy": "🇮🇹", "Azerbaijan": "🇦🇿",
+    "Singapore": "🇸🇬", "Mexico": "🇲🇽", "Brazil": "🇧🇷",
+    "Qatar": "🇶🇦", "United Arab Emirates": "🇦🇪", "France": "🇫🇷"
+}
+
+# Code couleurs écuries
 TEAM_COLORS = {
     'Red Bull Racing': '#3671c6', 
     'Ferrari': '#e8002d', 

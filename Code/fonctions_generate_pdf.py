@@ -1,3 +1,8 @@
+### ======== STAYOUT - Fonctions Generate PDF ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import os
 import io
 from datetime import datetime, timedelta
@@ -8,7 +13,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.enums import TA_CENTER
 
-# ── Couleurs ──────────────────────────────────────────────────────────────────
+# --- Couleurs ---
 F1_GREEN = '#09ab3b'
 F1_RED   = '#e10600'
 F1_DARKRED = '#aa0909'
@@ -19,7 +24,7 @@ WHITE    = '#ffffff'
 BLACK    = '#000000'
 
 
-# ── Styles partagés ───────────────────────────────────────────────────────────
+# --- Styles ---
 def base_styles():
     styles = getSampleStyleSheet()
 
@@ -101,20 +106,19 @@ def base_styles():
     }
 
 
-# ── Header commun ─────────────────────────────────────────────────────────────
+# --- Header --- 
 def build_header(styles, event_name, round_num, date_event, year, doc_type, logo_path=None):
     story = []
 
-    # Logo image ou texte fallback
+    ## Logo image
     if logo_path and os.path.exists(logo_path):
         logo = RLImage(logo_path, width=5*cm, height=3*cm, kind='proportional')
         logo.hAlign = 'CENTER'
         story.append(logo)
     else:
-        # Fallback texte si pas de logo
         story.append(Paragraph("STAYOUT", styles['app_title']))
 
-    # Titre du document
+    ## Titre du document
     story.append(Paragraph(f"{year} {event_name.upper()}", styles['doc_title']))
 
     ## Calcul date de l'évènement
@@ -123,7 +127,7 @@ def build_header(styles, event_name, round_num, date_event, year, doc_type, logo
 
     story.append(Paragraph(f"{date_event}", styles['doc_subtitle']))
 
-    # Tableau metadata style F1
+    ## Tableau style F1
     meta_data = [
         [Paragraph("<b>From</b>", inline()), Paragraph("StayOut", inline()),
          Paragraph("<b>Document</b>", inline()), Paragraph(f"Prediction_R{round_num}_{year}", inline())],
@@ -141,27 +145,24 @@ def build_header(styles, event_name, round_num, date_event, year, doc_type, logo
     ]))
     story.append(meta_table)
     story.append(Spacer(1, 0.3*cm))
-
     return story
-
 
 def inline():
     return ParagraphStyle('inline', fontSize=9, textColor=F1_DARK, fontName='Helvetica')
 
-
-# ── Footer commun ─────────────────────────────────────────────────────────────
+# --- Footer ---
 def draw_footer(canvas, doc, round_num, year):
     canvas.saveState()
     
     page_width = A4[0]
-    footer_y = 1*cm  # Position depuis le bas
+    footer_y = 1*cm
     
-    # Ligne grise
+    ## Ligne grise
     canvas.setStrokeColor(F1_GREY)
     canvas.setLineWidth(0.5)
     canvas.line(1.5*cm, footer_y + 0.4*cm, page_width - 1.5*cm, footer_y + 0.4*cm)
     
-    # Texte footer
+    ## Texte footer
     canvas.setFont('Helvetica', 8)
     canvas.setFillColor(F1_GREY)
     canvas.drawCentredString(
@@ -172,7 +173,7 @@ def draw_footer(canvas, doc, round_num, year):
     canvas.restoreState()
 
 
-# ── Style tableau de données ──────────────────────────────────────────────────
+# --- Style tableau de données ---
 def data_table_style(num_rows=25):
     style = [
         ('BACKGROUND',  (0, 0), (-1, 0),  F1_RED),
@@ -189,16 +190,15 @@ def data_table_style(num_rows=25):
         ('TOPPADDING',    (0, 0), (-1, -1), 2),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
     ]
-    # Alternance limitée au nombre réel de lignes
     for i in range(1, num_rows):
         bg = F1_LIGHT if i % 2 == 0 else WHITE
         style.append(('BACKGROUND', (0, i), (-1, i), bg))
     return style
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ================================================================
 # PDF 1 — Prédictions avant la course
-# ══════════════════════════════════════════════════════════════════════════════
+# ================================================================
 def generate_prediction_pdf(results, df_importance, event_name, round_num, date_event, year):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -208,13 +208,13 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
     styles = base_styles()
     story = []
 
-    # ── Header ────────────────────────────────────────────────────────────────
-    story += build_header(styles, event_name, round_num, date_event, year, "Pre-Race Prediction", logo_path="./assets/Logo_Stayout.png")
+    ## Header
+    story += build_header(styles, event_name, round_num, date_event, year, "Pre-Race Prediction", logo_path="./assets/Logo_StayoutW.png")
 
-    # ── Title ────────────────────────────────────────────────────────────────
+    ## Title 
     story.append(Paragraph("Prediction Report", styles['title']))
 
-    # ── Note intro ────────────────────────────────────────────────────────────
+    ## Intro 
     story.append(Paragraph("1) Predicted Race Classification", styles['section_title']))
     story.append(Paragraph(
         f"The following classification has been generated by the StayOut ML engine for the {event_name}."
@@ -224,7 +224,7 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
     ))
     story.append(Spacer(1, 0.3*cm))
 
-    # ── Tableau prédictions ───────────────────────────────────────────────────
+    ## Tableau prédictions
     pred_data = [["Driver", "Starting Grid", "Predicted Pos", "Podium Proba"]]
     for i, (_, row) in enumerate(results.iterrows(), start=1):
         pred_data.append([
@@ -242,7 +242,7 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
 
     story.append(Spacer(1, 0.3*cm))
 
-    # ── Graphique Feature Importance ─────────────────────────────────────────────
+    ## Graphique Feature Importance
     story.append(Paragraph("2) Features Weight", styles['section_title']))
 
     story.append(Paragraph(
@@ -252,10 +252,10 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
 
     importance_sorted = df_importance.sort_values('Importance', ascending=False).reset_index(drop=True)
 
-    # Calcul des pourcentages
+    ## Calcul des pourcentages
     importance_sorted['Importance_pct'] = (importance_sorted['Importance'] / importance_sorted['Importance'].sum() * 100).round(1)
 
-    # Génération du graphique
+    ## Génération du graphique
     fig, ax = plt.subplots(figsize=(8, 4))
     bars = ax.bar(
         importance_sorted['Feature'],
@@ -265,7 +265,7 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
         width=0.6
     )
 
-    # Valeur % au dessus de chaque barre
+    ## Valeur % au dessus de chaque barre
     for bar, pct in zip(bars, importance_sorted['Importance_pct']):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
@@ -297,13 +297,13 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
     fig.patch.set_facecolor('white')
     plt.tight_layout(pad=0.5)
 
-    # Sauvegarde en mémoire
+    ## Sauvegarde en mémoire
     img_buffer = io.BytesIO()
     fig.savefig(img_buffer, format='PNG', dpi=150, bbox_inches='tight')
     plt.close(fig)
     img_buffer.seek(0)
 
-    # Insertion dans le PDF
+    ## Insertion dans le PDF
     fig_w, fig_h = fig.get_size_inches()
     ratio = fig_h / fig_w
 
@@ -313,7 +313,7 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
     chart_img = RLImage(img_buffer, width=img_width, height=img_height)
     story.append(chart_img)
 
-    # ── Build Doc ───────────────────────────────────────────────────
+    ## Build Document
     doc.build(story,
         onFirstPage=lambda canvas, doc: draw_footer(canvas, doc, round_num, year),
         onLaterPages=lambda canvas, doc: draw_footer(canvas, doc, round_num, year),
@@ -321,10 +321,9 @@ def generate_prediction_pdf(results, df_importance, event_name, round_num, date_
     buffer.seek(0)
     return buffer
 
-
-# ══════════════════════════════════════════════════════════════════════════════
+# ================================================================
 # PDF 2 — Comparaison prédiction vs réalité après la course
-# ══════════════════════════════════════════════════════════════════════════════
+# ================================================================
 def generate_comparison_pdf(df_compare, mae_rank, mae_raw, top1_check, event_name, round_num, date_event, year):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -334,13 +333,13 @@ def generate_comparison_pdf(df_compare, mae_rank, mae_raw, top1_check, event_nam
     styles = base_styles()
     story = []
 
-    # ── Header ────────────────────────────────────────────────────────────────
-    story += build_header(styles, event_name, round_num, date_event, year, "Post-Race Analysis", logo_path="./assets/Logo_Stayout.png")
+    ## Header
+    story += build_header(styles, event_name, round_num, date_event, year, "Post-Race Analysis", logo_path="./assets/Logo_StayoutW.png")
 
-    # ── Title ────────────────────────────────────────────────────────────────
+    ## Title
     story.append(Paragraph("Prediction Report", styles['title']))
 
-    # ── Métriques ─────────────────────────────────────────────────────────────
+    ## Métriques
     story.append(Paragraph("1) Model Performance Metrics", styles['section_title']))
     story.append(Paragraph(
         f"The StayOut prediction engine has been evaluated against the official {event_name} results. ",
@@ -366,7 +365,7 @@ def generate_comparison_pdf(df_compare, mae_rank, mae_raw, top1_check, event_nam
 
     story.append(Spacer(1, 0.3*cm))
 
-    # ── Tableau comparaison ───────────────────────────────────────────────────
+    ## Tableau comparaison
     story.append(Paragraph("2) Prediction vs Reality", styles['section_title']))
     story.append(Paragraph(
         "The table below compares the StayOut predicted finishing order against the official race results. ",
@@ -394,7 +393,7 @@ def generate_comparison_pdf(df_compare, mae_rank, mae_raw, top1_check, event_nam
     comp_table.setStyle(TableStyle(data_table_style(len(comp_data))))
     story.append(comp_table)
 
-    # ── Build Doc ───────────────────────────────────────────────────
+    ## Build Document
     doc.build(story,
         onFirstPage=lambda canvas, doc: draw_footer(canvas, doc, round_num, year),
         onLaterPages=lambda canvas, doc: draw_footer(canvas, doc, round_num, year),

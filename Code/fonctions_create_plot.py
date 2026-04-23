@@ -1,29 +1,26 @@
+### ======== STAYOUT - Fonctions Create Plot ======== ### 
+
+# ----------------------------
+# IMPORTATIONS DES LIBRAIRIES
+# ----------------------------
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from Code.fonctions_get_data import get_flag_emoji
 from Code.constants import TEAM_COLORS, DRAPEAUX
-from Code.fonctions_get_data import get_circuit_corners
 
+# Création barre de progression saison
 def display_f1_progress_bar(current_round, total_rounds, futur_events):
     progress_pct = (current_round / total_rounds) * 100
-    
-    # Construction des petites cases (Grid Items)
     calendar_grid_html = ""
-    
     for _, row in futur_events.iterrows():
-        # Formatage de la date (ex: "24 MAR")
         try:
             date_display = row['EventDate'].strftime('%d %b').upper()
         except:
             date_display = str(row['EventDate'])
-        
-        iso_code = DRAPEAUX.get(row['Country'], "un")  
-        url_drapeau = f"https://flagcdn.com/256x192/{iso_code}.png"
-            
-        # On simplifie le nom du GP pour qu'il tienne dans une petite case
+        url_drapeau = get_flag_emoji(row['Country'])
         short_name = row['EventName'].replace('Grand Prix', 'GP')
-
         calendar_grid_html += f""" <div style="background: #1f1f27; padding: 10px; border-radius: 6px; border-bottom: 3px solid #38383f; text-align: center; min-width: 100px; font-family: 'Arial', sans-serif;">
             <div style="color: #FF1801; font-weight: bold; font-size: 0.7em; margin-bottom: 6px;">
                 {date_display}
@@ -37,7 +34,6 @@ def display_f1_progress_bar(current_round, total_rounds, futur_events):
             </div>
         </div>
         """
-
     full_html = f"""
     <style>
         .f1-card {{
@@ -92,11 +88,10 @@ def display_f1_progress_bar(current_round, total_rounds, futur_events):
         </details>
     </div>
     """
-    
     return st.markdown(full_html, unsafe_allow_html=True)
 
+# Affichage classement pilotes / écuries
 def display_f1_standings(drivers_df, constructors_df):
-    # CSS pour le style "Live Timing"
     st.markdown("""
         <style>
         .standing-row {
@@ -142,14 +137,13 @@ def display_f1_standings(drivers_df, constructors_df):
         }
         </style>
     """, unsafe_allow_html=True)
-
     col_left, col_right = st.columns(2, gap="large")
 
     # --- CLASSEMENT PILOTES ---
     with col_left:
         st.markdown("### 🏎️ CLASSEMENT PILOTES")
         if not drivers_df.empty:
-            # Podium Top 3 (Version simplifiée sans victoires)
+            # Podium Top 3
             p_cols = st.columns(3)
             order = [1, 0, 2] # P2, P1, P3
             for i, idx in enumerate(order):
@@ -164,8 +158,7 @@ def display_f1_standings(drivers_df, constructors_df):
                                 <div style="color:#FF1801; font-weight:bold;">{int(row['Points'])}</div>
                             </div>
                         """, unsafe_allow_html=True)
-
-            # Reste du classement (P4+)
+            # Reste du classement
             for _, row in drivers_df.iloc[3:].iterrows():
                 color = TEAM_COLORS.get(row['Ecurie'], '#FFFFFF')
                 st.markdown(f"""
@@ -197,8 +190,7 @@ def display_f1_standings(drivers_df, constructors_df):
                                     <div style="color:#FF1801; font-weight:bold;">{int(row['Points'])}</div>
                                 </div>
                             """, unsafe_allow_html=True)
-
-            # Reste du classement (P4+)
+            # Reste du classement
             for _, row in constructors_df.iloc[3:].iterrows():
                 color = TEAM_COLORS.get(row['Ecurie'], '#FFFFFF')
                 st.markdown(f"""
@@ -210,32 +202,23 @@ def display_f1_standings(drivers_df, constructors_df):
                     </div>
                 """, unsafe_allow_html=True)
 
-
+# Graphique analyse de course
 def create_lap_chart(_session):
     fig = go.Figure()
-
     sorted_drivers = _session.results.sort_values(by='ClassifiedPosition')['Abbreviation'].tolist()
-
     for abb in sorted_drivers:
         driver_res = _session.results[_session.results['Abbreviation'] == abb].iloc[0]
-        
         team_name = driver_res['TeamName']
         grid_pos = driver_res['GridPosition']
         final_pos = int(driver_res['Position'])
-        
         driver_laps = _session.laps.pick_driver(abb)
-
         x_values = [0]
         y_values = [grid_pos]
-
-        # Si le pilote a fait des tours, on les ajoute à la suite
         if not driver_laps.empty:
             x_values.extend(driver_laps['LapNumber'].tolist())
             y_values.extend(driver_laps['Position'].tolist())
-        
         color = TEAM_COLORS.get(team_name, '#808080')
-        
-        # Ajouter la ligne au graphique
+
         fig.add_trace(go.Scatter(
             x=x_values,
             y=y_values,
@@ -247,11 +230,10 @@ def create_lap_chart(_session):
             hovertemplate="<b>" + abb + "</b><br>Pos: %{y}<extra></extra>"
         ))
 
-    # Personnalisation de l'affichage
     fig.update_layout(
         title=dict(
             text=f"<b>Évolution des positions</b><br><span style='font-size:14px; color:grey'>{_session.event['EventName']} {_session.event.year}</span>",
-            x=0, # Aligné à gauche
+            x=0,
             font=dict(size=24)
         ),
         xaxis=dict(
@@ -271,13 +253,13 @@ def create_lap_chart(_session):
             gridcolor='rgba(255, 255, 255, 0.1)',
             range=[len(sorted_drivers) + 0.5, 0.5],
             zeroline=False,
-            fixedrange=True # Empêche le zoom vertical bizarre
+            fixedrange=True
         ),
         template="plotly_dark",
         height=700,
         hovermode="x unified",
         hoverlabel=dict(
-            bgcolor="rgba(30, 30, 30,1)", # Fond sombre semi-transparent
+            bgcolor="rgba(30, 30, 30,1)",
             font_size=10,
             font_family="Arial",
             bordercolor="white"
@@ -293,18 +275,15 @@ def create_lap_chart(_session):
             bgcolor="rgba(0,0,0,0)"
         )
     )
-
     return fig
 
+# Graphique télémétries
 def create_comparison_telemetry(telemetry_data):
     fig = go.Figure()
-
     color_usage_count = {}
-
     for abb, data in telemetry_data.items():
         telemetry = data['telemetry']
         team_color = TEAM_COLORS.get(data['team'], '#808080')
-        
         color_usage_count[team_color] = color_usage_count.get(team_color, 0) + 1
         line_style = 'solid'
         if color_usage_count[team_color] == 2:
@@ -320,7 +299,7 @@ def create_comparison_telemetry(telemetry_data):
             line=dict(
                 color=team_color, 
                 width=2, 
-                dash=line_style  # Application du style dynamique
+                dash=line_style 
             ),
             hovertemplate=f"<b>{abb}</b><br>Vitesse: %{{y}} km/h<br>Distance: %{{x}}m<extra></extra>"
         ))
@@ -345,11 +324,10 @@ def create_comparison_telemetry(telemetry_data):
         ),
         showlegend=True
     )
-
     return fig
 
+# Graphique télémétrie pédale
 def create_pedal_comparison(telemetry_data):
-    # On crée 2 lignes : une pour l'accélérateur, une pour le frein
     fig = make_subplots(
         rows=2, cols=1, 
         shared_xaxes=True, 
@@ -357,18 +335,16 @@ def create_pedal_comparison(telemetry_data):
         subplot_titles=("Accélérateur (%)", "Frein (On/Off)"),
         row_heights=[0.5, 0.5]
     )
-
     color_usage_count = {}
 
     for abb, data in telemetry_data.items():
         telemetry = data['telemetry']
         team_color = TEAM_COLORS.get(data['team'], '#808080')
-        
         # Gestion du style de ligne pour les coéquipiers
         color_usage_count[team_color] = color_usage_count.get(team_color, 0) + 1
         line_style = 'dash' if color_usage_count[team_color] == 2 else 'solid'
         
-        # --- 1. THROTTLE (Ligne 1) ---
+        # --- THROTTLE (Ligne 1) ---
         fig.add_trace(go.Scatter(
             x=telemetry['Distance'], 
             y=telemetry['Throttle'],
@@ -378,14 +354,14 @@ def create_pedal_comparison(telemetry_data):
             hovertemplate="<b>" + abb + "</b><br>Accel: %{y}%<extra></extra>"
         ), row=1, col=1)
 
-        # --- 2. BRAKE (Ligne 2) ---
+        # --- BRAKE (Ligne 2) ---
         fig.add_trace(go.Scatter(
             x=telemetry['Distance'], 
             y=telemetry['Brake'],
             name=f"{abb} (Frein)", 
             line=dict(color=team_color, width=2, dash=line_style),
             legendgroup=abb,
-            showlegend=False, # On ne l'affiche qu'une fois dans la légende
+            showlegend=False,
             hovertemplate="<b>" + abb + "</b><br>Frein: %{y}<extra></extra>"
         ), row=2, col=1)
 
@@ -403,23 +379,20 @@ def create_pedal_comparison(telemetry_data):
     fig.update_yaxes(title_text="Throttle %", range=[-5, 105], row=1, col=1)
     fig.update_yaxes(title_text="Brake", range=[-0.1, 1.1], dtick=1, row=2, col=1)
     fig.update_xaxes(title_text="Distance (m)", row=2, col=1)
-
     return fig
 
+# Graphique rapport boite vitesse
 def create_gear_comparison(telemetry_data):
     fig = go.Figure()
-    
     color_usage_count = {}
-
     for abb, data in telemetry_data.items():
         telemetry = data['telemetry']
         team_color = TEAM_COLORS.get(data['team'], '#808080')
-        
-        # Gestion du style de ligne (Plein vs Tirets)
+
+        # Gestion du style de ligne
         color_usage_count[team_color] = color_usage_count.get(team_color, 0) + 1
         line_style = 'dash' if color_usage_count[team_color] == 2 else 'solid'
-        
-        # On utilise line_shape='hv' pour un tracé en escalier (Gear Shift)
+
         fig.add_trace(go.Scatter(
             x=telemetry['Distance'], 
             y=telemetry['nGear'],
@@ -429,7 +402,7 @@ def create_gear_comparison(telemetry_data):
                 color=team_color, 
                 width=3, 
                 dash=line_style,
-                shape='hv' # Important : dessine des marches d'escalier
+                shape='hv'
             ),
             hovertemplate=f"<b>{abb}</b><br>Rapport: %{{y}}<br>Distance: %{{x}}m<extra></extra>"
         ))
@@ -442,7 +415,7 @@ def create_gear_comparison(telemetry_data):
             tickmode='linear',
             tick0=1,
             dtick=1,
-            range=[0.5, 8.5] # La boîte F1 va de 1 à 8
+            range=[0.5, 8.5]
         ),
         template="plotly_dark",
         height=450,
@@ -450,9 +423,9 @@ def create_gear_comparison(telemetry_data):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         showlegend=True
     )
-
     return fig
 
+# Ajout du numéro des virages sur les graphiques
 def add_corners_to_fig(fig, corners):
     if corners is None:
         return fig
@@ -463,7 +436,7 @@ def add_corners_to_fig(fig, corners):
                 line_width=1,
                 line_dash="dot",
                 line_color="rgba(255, 255, 255, 0.3)",
-                annotation_text=f"V{int(corner['Number'])}", # "V" pour Virage
+                annotation_text=f"V{int(corner['Number'])}",
                 annotation_position="bottom",
                 annotation_font_size=10,
                 annotation_font_color="grey",
