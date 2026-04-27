@@ -3,11 +3,11 @@
 Stayout est une application Streamlit qui exploite les données de la saison de Formule 1 2026 pour analyser les performances et prédire les résultats de chaque Grand Prix grâce à un modèle de Machine Learning.
 
 ## Fonctionnalités
-    * Données temps réel via FastF1 API (télémétrie, vitesse, DRS, freinage)
-    * Prédictions ML (Gradient Boosting) entraîné sur l'historique de la saison
-    * Rapports PDF générés automatiquement avant et après chaque course
-    * Conservation des données via Google Sheets API (sans fichiers locaux)
-    * Visualisations interactives avec Plotly
+- Données temps réel via FastF1 API (télémétrie, vitesse, DRS, freinage)
+- Prédictions ML (Gradient Boosting) entraîné sur l'historique de la saison
+- Rapports PDF générés automatiquement avant et après chaque course
+- Conservation des données via Google Sheets API (sans fichiers locaux)
+- Visualisations interactives avec Plotly
 
 ## Hébergement Cloud
 Déploiment via Streamlit.
