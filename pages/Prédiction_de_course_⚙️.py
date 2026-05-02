@@ -162,7 +162,7 @@ def main():
         df_master = initialize_feature_df_race(2026, 1)
         save_to_master_db_sheet(df_master)
 
-    futur_events = df_calendar[df_calendar['Session5DateUtc'] > actual_date]
+    futur_events = df_calendar[df_calendar['Session5DateUtc'] >= actual_date]
     past_events = df_calendar[df_calendar['Session5DateUtc'] < actual_date]
 
     if not futur_events.empty:
