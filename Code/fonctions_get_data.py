@@ -35,14 +35,14 @@ def get_calendar(year):
 def get_race_session(year, round_num):
     with st.spinner("Chargement de la course..."):
         sess = fastf1.get_session(year, round_num, 'R')
-        sess.load(telemetry=True, weather=False, messages=False)
+        sess.load(laps=True, telemetry=True, weather=False, messages=False)
     return sess
 
 # Récupération session qualification
 def get_qualif_session(year, round_num):
     with st.spinner("Chargement de la qualification..."):
         sess = fastf1.get_session(year, round_num, 'Q')
-        sess.load(telemetry=True, weather=False, messages=False)
+        sess.load(laps=True, telemetry=True, weather=False, messages=False)
     return sess
 
 # Calcul classement pilotes / écuries
