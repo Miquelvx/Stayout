@@ -162,7 +162,7 @@ def main():
         df_master = initialize_feature_df_race(2026, 1)
         save_to_master_db_sheet(df_master)
 
-    futur_events = df_calendar[df_calendar['Session5DateUtc'] > actual_date]
+    futur_events = df_calendar[df_calendar['Session5DateUtc'] >= actual_date]
     past_events = df_calendar[df_calendar['Session5DateUtc'] < actual_date]
 
     if not futur_events.empty:
@@ -245,7 +245,7 @@ def main():
                 # --- 8. Nettoyage final ---
                 results = results.reset_index(drop=True)
                 results.index = results.index + 1
-                results.index.name = 'Pos'
+                results.index.name = 'Predicted_Rank'
 
                 round_num = df_next_gp['RoundNumber'].iloc[0]
                 year = df_next_gp['Year'].iloc[0]
