@@ -30,6 +30,9 @@ if 'actual_year' in st.session_state:
 
 if 'df_calendar{actual_year}' in st.session_state:
     df_calendar = st.session_state['df_calendar{actual_year}']
+else:
+    st.warning("Veuillez repasser par la page d'accueil pour charger les données.")
+    st.stop()
 
 if 'delta' in st.session_state:
     delta = st.session_state['delta']
@@ -38,6 +41,9 @@ if 'delta' in st.session_state:
 
 if 'constructors_df' in st.session_state:
     constructors_df = st.session_state['constructors_df']
+else:
+    st.warning("Veuillez repasser par la page d'accueil pour charger les données.")
+    st.stop()
 
 # CSS Affichage tableau prédictions
 st.markdown("""
