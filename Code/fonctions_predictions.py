@@ -181,6 +181,10 @@ def initialize_feature_df_qualif(year, round_number):
     
     # 2. Récupération des résultats de course
     results_race = session_qualif.results.copy()
+
+    # Sécurité : si les résultats de qualif sont vides, la session n'a pas encore eu lieu ou pas encore disponible.
+    if results_race.empty:
+        raise ValueError(f"Les qualifications du round {round_number} n'ont pas encore eu lieu.")
     
     ## Sélection des colonnes
     results_columns = ['Abbreviation', 'TeamName', 'Position', 'GridPosition']
