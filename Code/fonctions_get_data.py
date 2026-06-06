@@ -32,6 +32,7 @@ def get_calendar(year):
     return df_calendar
 
 # Récupération session de course
+@st.cache_resource
 def get_race_session(year, round_num):
     with st.spinner("Chargement de la course..."):
         sess = fastf1.get_session(year, round_num, 'R')
@@ -39,6 +40,7 @@ def get_race_session(year, round_num):
     return sess
 
 # Récupération session qualification
+@st.cache_resource
 def get_qualif_session(year, round_num):
     with st.spinner("Chargement de la qualification..."):
         sess = fastf1.get_session(year, round_num, 'Q')
