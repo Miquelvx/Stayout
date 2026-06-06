@@ -187,7 +187,11 @@ def main():
 
             if not prediction_exists(next_event['RoundNumber'], 2026):
                 # --- 1. Initialiser les données du GP actuel pour la prédiction ---
-                df_next_gp = initialize_feature_df_qualif(2026, next_event['RoundNumber'])
+                try:
+                    df_next_gp = initialize_feature_df_qualif(2026, next_event['RoundNumber'])
+                except ValueError as e:
+                    st.warning(str(e))
+                    st.stop()
 
                 # --- 2. Récupérer le momentum (last_qualif_pos) du GP précédent ---
                 mapping_last_quali = df_master[df_master['RoundNumber'] == next_event['RoundNumber']-1].set_index('Abbreviation')['qualif_pos'].to_dict()
