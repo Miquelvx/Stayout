@@ -86,7 +86,7 @@ def get_weather_data_after_qualif(session, api_key=None, coords=None):
     return get_weather_forecast(coords['lat'], coords['lon'], api_key, session.date)
 
 # Fonction initialisation dataframe course
-def initialize_feature_df_race(year, round_number):
+def initialize_feature_df_race(year, round_number, constructors_df):
     # 1. Chargement des sessions
     session_race = fastf1.get_session(year, round_number, 'R')
     session_qualif = fastf1.get_session(year, round_number, 'Q')
@@ -174,7 +174,7 @@ def initialize_feature_df_race(year, round_number):
     return df_feature
 
 # Fonction initialisation dataframe qualifs
-def initialize_feature_df_qualif(year, round_number):
+def initialize_feature_df_qualif(year, round_number, constructors_df):
     # 1. Chargement des sessions
     session_qualif = fastf1.get_session(year, round_number, 'Q')
     session_qualif.load(laps=True, telemetry=True, weather=True, messages=False)
