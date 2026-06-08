@@ -54,7 +54,11 @@ TEAM_COLORS = {
     'Kick Sauber': "#01C00E",
     'RB': "#6692FF",
     'AlphaTauri': "#5E8FAA",
-    'Alfa Romeo': "#C92D4B"
+    'Alfa Romeo': "#C92D4B", 
+    'Red Bull': '#3671c6',
+    'Alpine F1 Team': '#00a1e8',
+    'RB F1 Team': '#6692ff', 
+    'Cadillac F1 Team': "#aaaaad",
 }
 
 # Dictionnaire coordonnées GPS circuits
