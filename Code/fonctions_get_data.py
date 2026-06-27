@@ -48,6 +48,7 @@ def get_qualif_session(year, round_num):
     return sess
 
 # Calcul classement pilotes / écuries
+@st.cache_data(ttl=3600)
 def get_current_standings(actual_date):
     with st.spinner("Calcul des classements F1..."):
         drivers_df = pd.DataFrame()
