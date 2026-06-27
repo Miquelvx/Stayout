@@ -184,9 +184,15 @@ def main():
     display_f1_progress_bar(current_round=current_round, total_rounds=total_rounds, futur_events=futur_events)
 
     st.divider()
-
-    drivers_df, constructors_df = get_current_standings(actual_date)
-
+    
+    cond_sprint = (df_calendar['EventFormat'] == 'sprint_qualifying')
+    cond_conv   = (df_calendar['EventFormat'] == 'conventional')
+    reference_date = np.select([cond_sprint, cond_conv], [df_calendar['Session3DateUtc'], df_calendar['Session5DateUtc']], default=df_calendar['Session5DateUtc'])
+    completed_rounds = tuple(df_calendar[reference_date <= actual_date]['RoundNumber'].tolist())
+    
+    with st.spinner("Calcul des classements F1..."):
+        drivers_df, constructors_df = get_current_standings(actual_date.year, completed_rounds)
+        
     st.session_state['drivers_df'] = drivers_df
     st.session_state['constructors_df'] = constructors_df
 
