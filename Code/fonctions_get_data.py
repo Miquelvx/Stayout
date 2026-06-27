@@ -49,70 +49,66 @@ def get_qualif_session(year, round_num):
 
 # Calcul classement pilotes / écuries
 @st.cache_data(ttl=3600)
-def get_current_standings(actual_date):
-    with st.spinner("Calcul des classements F1..."):
-        drivers_df = pd.DataFrame()
-        constructors_df = pd.DataFrame()
-        drivers_data = {}
-        constructors_data = {}
+def get_current_standings(year: int, completed_rounds: tuple):
+    # completed_rounds est un tuple de RoundNumber déjà courus
+    # (tuple car les listes ne sont pas hashables par st.cache_data)
+    drivers_df = pd.DataFrame()
+    constructors_df = pd.DataFrame()
+    drivers_data = {}
+    constructors_data = {}
 
-        df_calendar = get_calendar(actual_date.year)
-        
-        try:
-            cond_sprint = (df_calendar['EventFormat'] == 'sprint_qualifying')
-            cond_conv = (df_calendar['EventFormat'] == 'conventional')
+    try:
+        for round_number in completed_rounds:
+            try:
+                # Chargement des résultats de la course
+                session = fastf1.get_session(year, round_number, 'R')
+                session.load(laps=False, telemetry=False, weather=False, messages=False)
+                if hasattr(session, 'results'):
+                    for _, row in session.results.iterrows():
+                        abb = row['Abbreviation']
+                        team = row['TeamName']
+                        pts = row['Points']
 
-            reference_date = np.select(
-                [cond_sprint, cond_conv], 
-                [df_calendar['Session3DateUtc'], df_calendar['Session5DateUtc']], 
-                default=df_calendar['Session5DateUtc'] )
-            completed_events = df_calendar[reference_date <= actual_date]
-            for _, event in completed_events.iterrows():
-                try:
-                    # Chargement des résultats de la course
-                    session = fastf1.get_session(actual_date.year, event['RoundNumber'], 'R')
-                    session.load(telemetry=False, weather=False, messages=False)
-                    if hasattr(session, 'results'):
-                        for _, row in session.results.iterrows():
+                        # Pilotes
+                        if abb not in drivers_data:
+                            drivers_data[abb] = {'Pilote': row['FullName'], 'Ecurie': team, 'Points': 0.0}
+                        drivers_data[abb]['Points'] += pts
+
+                        # Constructeurs
+                        if team not in constructors_data:
+                            constructors_data[team] = {'Ecurie': team, 'Points': 0.0}
+                        constructors_data[team]['Points'] += pts
+
+                # Gestion des points Sprint
+                if session.event['Session3'] == 'Sprint':
+                    s_sess = fastf1.get_session(year, round_number, 'S')
+                    s_sess.load(laps=False, telemetry=False, weather=False, messages=False)
+                    if hasattr(s_sess, 'results'):
+                        for _, row in s_sess.results.iterrows():
                             abb = row['Abbreviation']
                             team = row['TeamName']
                             pts = row['Points']
-                            
-                            # Pilotes
-                            if abb not in drivers_data:
-                                drivers_data[abb] = {'Pilote': row['FullName'], 'Ecurie': team, 'Points': 0.0}
-                            drivers_data[abb]['Points'] += pts
-                                
-                            # Constructeurs
-                            if team not in constructors_data:
-                                constructors_data[team] = {'Ecurie': team, 'Points': 0.0}
-                            constructors_data[team]['Points'] += pts
-                    # Gestion des points Sprint
-                    if event['Session3'] == 'Sprint':
-                        s_sess = fastf1.get_session(actual_date.year, event['RoundNumber'], 'S')
-                        s_sess.load(telemetry=False, weather=False, messages=False)
-                        if hasattr(s_sess, 'results'):
-                            for _, row in s_sess.results.iterrows():
-                                abb = row['Abbreviation']
-                                team = row['TeamName']
-                                pts = row['Points']
-                                if abb in drivers_data: drivers_data[abb]['Points'] += pts
-                                if team in constructors_data: constructors_data[team]['Points'] += pts   
-                except Exception:
-                    continue
-            # Création des DataFrames finaux
-            if drivers_data:
-                drivers_df = pd.DataFrame(drivers_data.values())
-                drivers_df = drivers_df.sort_values(by=['Points'], ascending=False).reset_index(drop=True)
-                drivers_df['Pos'] = drivers_df.index + 1
-                drivers_df = drivers_df[['Pos', 'Pilote', 'Ecurie', 'Points']]
-            if constructors_data:
-                constructors_df = pd.DataFrame(constructors_data.values())
-                constructors_df = constructors_df.sort_values(by=['Points'], ascending=False).reset_index(drop=True)
-                constructors_df['Pos'] = constructors_df.index + 1
-                constructors_df = constructors_df[['Pos', 'Ecurie', 'Points']]
-        except Exception as e:
-            st.error(f"Erreur lors de la récupération des classements : {e}")
+                            if abb in drivers_data: drivers_data[abb]['Points'] += pts
+                            if team in constructors_data: constructors_data[team]['Points'] += pts
+
+            except Exception:
+                continue
+
+        # Création des DataFrames finaux
+        if drivers_data:
+            drivers_df = pd.DataFrame(drivers_data.values())
+            drivers_df = drivers_df.sort_values(by=['Points'], ascending=False).reset_index(drop=True)
+            drivers_df['Pos'] = drivers_df.index + 1
+            drivers_df = drivers_df[['Pos', 'Pilote', 'Ecurie', 'Points']]
+        if constructors_data:
+            constructors_df = pd.DataFrame(constructors_data.values())
+            constructors_df = constructors_df.sort_values(by=['Points'], ascending=False).reset_index(drop=True)
+            constructors_df['Pos'] = constructors_df.index + 1
+            constructors_df = constructors_df[['Pos', 'Ecurie', 'Points']]
+
+    except Exception as e:
+        st.error(f"Erreur lors de la récupération des classements : {e}")
+
     return drivers_df, constructors_df
 
 # Calcul statistiques de course
