@@ -7,6 +7,7 @@
 import streamlit as st
 import fastf1
 import pandas as pd
+import numpy as np
 from datetime import datetime
 import os
 import time
