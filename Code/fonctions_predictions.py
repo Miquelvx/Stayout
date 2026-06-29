@@ -65,20 +65,17 @@ def get_weather_forecast(lat, lon, api_key, session_date):
 
 # Fonction récupération données météo
 def get_weather_data_after_race(session, api_key=None, coords=None):
-    # Si la session est à venir -> récupération météo future API
-    try:
-        session.load(laps=False, telemetry=False, weather=True)
-    except Exception as e:
-        print(f"Erreur lors du chargement de la session : {e}")
-        return None
-    
     print("Récupération météo réelle via FastF1...")
-    weather = session.weather_data
-    return (
-        weather['AirTemp'].mean().round(2), 
-        weather['TrackTemp'].mean().round(2), 
-        int(weather['Rainfall'].any())
-    )
+    try:
+        weather = session.weather_data
+        return (
+            weather['AirTemp'].mean().round(2),
+            weather['TrackTemp'].mean().round(2),
+            int(weather['Rainfall'].any())
+        )
+    except Exception as e:
+        print(f"Erreur récupération météo : {e}")
+        return 20.0, 30.0, 0
     
 # Fonction récupération données météo
 def get_weather_data_after_qualif(session, api_key=None, coords=None):
