@@ -253,7 +253,14 @@ def initialize_feature_df_qualif(year, round_number, constructors_df):
     # 9. Nettoyage final
     df_feature.drop(columns=['Driver'], inplace=True)
     df_feature.reset_index(drop=True)
-
+    
+    # Sécurité : remplacement des NaN résiduels pour éviter l'erreur sklearn
+    df_feature['topspeed_kmh_qualif'] = df_feature['topspeed_kmh_qualif'].fillna(0)
+    df_feature['constructor_pos'] = df_feature['constructor_pos'].fillna(df_feature['constructor_pos'].median())
+    df_feature['team_performance_lastgp'] = df_feature['team_performance_lastgp'].fillna(0)
+    df_feature['GapFromPole_pct'] = df_feature['GapFromPole_pct'].fillna(df_feature['GapFromPole_pct'].max())
+    df_feature['qualif_time'] = df_feature['qualif_time'].fillna(df_feature['qualif_time'].max())
+    
     return df_feature
 
 # Fonction calcul probabilité podium
