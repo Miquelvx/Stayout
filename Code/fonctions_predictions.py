@@ -173,30 +173,34 @@ def initialize_feature_df_qualif(year, round_number, constructors_df):
     # 1. Chargement des sessions
     session_qualif = fastf1.get_session(year, round_number, 'Q')
     session_qualif.load(laps=True, telemetry=True, weather=True, messages=False)
-    
-    # 2. Récupération des résultats de qualif
+
+    # 2. Récupération des résultats de course
     results_race = session_qualif.results.copy()
+    # Sécurité : si les résultats de qualif sont vides, la session n'a pas encore eu lieu ou pas encore disponible.
     if results_race.empty:
         raise ValueError(f"Les qualifications du round {round_number} n'ont pas encore eu lieu.")
-    
-    ## Sélection des colonnes — Position et GridPosition retirées car souvent vides pour les qualifs récentes
-    results_columns = ['Abbreviation', 'TeamName']
+
+    ## Sélection des colonnes
+    results_columns = ['Abbreviation', 'TeamName', 'Position', 'GridPosition']
     df_feature = results_race[results_columns].copy()
+    df_feature['last_qualif_pos'] = df_feature['GridPosition']
     df_feature['EventName'] = session_qualif.event['EventName']
     df_feature['RoundNumber'] = round_number
     df_feature['Year'] = year
-    df_feature['is_race_incident'] = 0  # pas d'incident de course dans une qualif
-
+    df_feature.rename(columns={
+        'GridPosition': 'race_finish_pos',
+        'Position': 'qualif_pos'
+    }, inplace=True)
+    df_feature['is_race_incident'] = ~results_race['Status'].str.contains('Finished|Lap', na=False)
+    df_feature['is_race_incident'] = df_feature['is_race_incident'].astype(int)
     ## Récupération des données météo
     coords = CIRCUITS_GPS.get(df_feature['EventName'].iloc[0], {'lat': 0, 'lon': 0})
     air_temp, track_temp, rain_proba = get_weather_data_after_qualif(session_qualif, api_key, coords)
-
     # 3. Traitement des données de qualifications
     laps_qualif = session_qualif.laps
     fastest_laps = laps_qualif.groupby('Driver').apply(lambda x: x.pick_fastest())
     fastest_laps = fastest_laps[['Driver', 'LapTime']].reset_index(drop=True)
     fastest_laps['LapTime'] = fastest_laps['LapTime'].dt.total_seconds()
-
     # 4. Fusion des données de qualification dans le dataframe
     df_feature = df_feature.merge(
         fastest_laps,
@@ -204,31 +208,23 @@ def initialize_feature_df_qualif(year, round_number, constructors_df):
         right_on='Driver',
         how='left'
     )
-
     # 5. Calculs des métriques de performance
     df_feature.rename(columns={'LapTime': 'qualif_time'}, inplace=True)
-    
-    ## Sécurité DNF/DNQ/DNS pendant les qualifications
-    df_feature['is_incident_quali'] = df_feature['qualif_time'].isna().astype(int)
-    df_feature['qualif_time'] = df_feature['qualif_time'].fillna(df_feature['qualif_time'].max())
-
-    ## qualif_pos calculé depuis le temps au tour (indépendant d'Ergast)
-    df_feature['qualif_pos'] = df_feature['qualif_time'].rank(method='min').astype(int)
-    df_feature['race_finish_pos'] = df_feature['qualif_pos']  # placeholder pour la structure
 
     ## Temps de la pole position
     pole_time = df_feature['qualif_time'].min()
-    
+
     ## Gap from pole en pourcentage
     df_feature['GapFromPole_pct'] = (((df_feature['qualif_time'] - pole_time) / pole_time) * 100).round(3)
+    ## Sécurité DNF/DNQ/DNS pendant les qualifications
+    df_feature['is_incident_quali'] = df_feature['qualif_time'].isna().astype(int)
+    df_feature['qualif_time'] = df_feature['qualif_time'].fillna(df_feature['qualif_time'].max())
     df_feature['GapFromPole_pct'] = df_feature['GapFromPole_pct'].fillna(df_feature['GapFromPole_pct'].max())
-
     # 6. Récupération Top Speed en qualifications
     df_feature['topspeed_kmh_qualif'] = df_feature['Abbreviation'].apply(lambda x: get_top_speed(session_qualif, x))
-    
+
     # 7. Position classement équipes
     df_feature['constructor_pos'] = df_feature['TeamName'].map(constructors_df.set_index('Ecurie')['Pos'])
-
     ## Ajout des points d'équipe du dernier gp
     if round_number > 1:
         prev_session = fastf1.get_session(year, round_number - 1, 'R')
@@ -237,16 +233,14 @@ def initialize_feature_df_qualif(year, round_number, constructors_df):
         df_feature['team_performance_lastgp'] = df_feature['TeamName'].map(team_points_prev).fillna(0)
     else:
         df_feature['team_performance_lastgp'] = 0
-
     # 8. Ajout données météo
     df_feature['air_temp_forecast'] = air_temp
     df_feature['track_temp_forecast'] = track_temp
     df_feature['rain_proba_forecast'] = rain_proba
-
     # 9. Nettoyage final
     df_feature.drop(columns=['Driver'], inplace=True)
     df_feature.reset_index(drop=True)
-    
+
     return df_feature
 
 # Fonction calcul probabilité podium
