@@ -233,6 +233,12 @@ def main():
                 # --- 5. Entraînement ---
                 model.fit(X_train, y_train)
 
+                # DEBUG TEMPORAIRE
+                print("=== NaN dans X_train ===")
+                print(X_train.isna().sum())
+                print("=== NaN dans X_predict ===")
+                print(X_predict.isna().sum())
+
                 # --- 6. Prédiction ---
                 predictions = model.predict(X_predict)
 
