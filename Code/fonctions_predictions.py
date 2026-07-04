@@ -42,22 +42,20 @@ def get_top_speed(session_qualif, driver_abb):
 # Fonction récupération prévisions météo 
 def get_weather_forecast(lat, lon, api_key, session_date):
     try:
-        #/forecast = prédictions futures
         url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
         response = requests.get(url).json()
         
         target_time = session_date.timestamp()
-
         best_match = min(response['list'], key=lambda x: abs(target_time - x['dt']))
 
-        air_temp = best_match['main']['temp']
+        air_temp = float(best_match['main']['temp'])
         clouds = best_match['clouds']['all']
         track_temp_est = air_temp + (20 if clouds < 20 else 8)
         
         rain_proba = 1 if "Rain" in best_match['weather'][0]['main'] or best_match.get('pop', 0) > 0.3 else 0
         
         print(f"☀️ Météo trouvée pour {best_match['dt_txt']} (Cible GP: {session_date})")
-        return air_temp.round(2), track_temp_est.round(2), rain_proba
+        return round(air_temp, 2), round(track_temp_est, 2), rain_proba
 
     except Exception as e:
         print(f"Erreur API Forecast : {e}")
