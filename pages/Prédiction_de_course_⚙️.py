@@ -22,8 +22,8 @@ from Code.fonctions_generate_pdf import generate_comparison_pdf, generate_predic
 st.set_page_config(page_title="Stayout - Prédiction de course", layout="wide")
 
 if 'actual_date' in st.session_state:
-    actual_date = st.session_state['actual_date']
-    #actual_date = pd.to_datetime("2026-03-28 12:00:00")
+    #actual_date = st.session_state['actual_date']
+    actual_date = pd.to_datetime("2026-07-18 21:00:00")
 
 if 'actual_year' in st.session_state:
     actual_year = st.session_state['actual_year']
