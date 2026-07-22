@@ -195,6 +195,7 @@ def main():
                 # --- 1. Initialiser les données du GP actuel pour la prédiction ---
                 try:
                     df_next_gp = initialize_feature_df_qualif(2026, next_event['RoundNumber'], constructors_df)
+                    print(next_event['RoundNumber'])
                 except ValueError as e:
                     st.warning(str(e))
                     st.stop()
