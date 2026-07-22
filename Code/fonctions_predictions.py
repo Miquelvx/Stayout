@@ -174,10 +174,6 @@ def initialize_feature_df_qualif(year, round_number, constructors_df):
     session_qualif = fastf1.get_session(year, round_number, 'Q')
     session_qualif.load(laps=True, telemetry=True, weather=True, messages=False)
     
-    # Test que les données FastF1 sont bien disponibles après le load
-    if not hasattr(session_qualif, '_laps') or session_qualif.laps is None or session_qualif.laps.empty:
-        raise ValueError(f"Les données de qualification du round {round_number} ne sont pas disponibles (FastF1). Réessaie dans quelques minutes.")
-
     # 2. Récupération des résultats de qualif
     results_race = session_qualif.results.copy()
     if results_race.empty:
@@ -196,7 +192,12 @@ def initialize_feature_df_qualif(year, round_number, constructors_df):
     air_temp, track_temp, rain_proba = get_weather_data_after_qualif(session_qualif, api_key, coords)
 
     # 3. Traitement des données de qualifications
-    laps_qualif = session_qualif.laps
+    try:
+        laps_qualif = session_qualif.laps
+        if laps_qualif is None or laps_qualif.empty:
+            raise ValueError(f"Les données de qualification du round {round_number} sont vides. Réessaie dans quelques minutes.")
+    except Exception as e:
+        raise ValueError(f"Les données de qualification du round {round_number} ne sont pas disponibles (FastF1) : {e}")
     fastest_laps = laps_qualif.groupby('Driver').apply(lambda x: x.pick_fastest())
     fastest_laps = fastest_laps[['Driver', 'LapTime']].reset_index(drop=True)
     fastest_laps['LapTime'] = fastest_laps['LapTime'].dt.total_seconds()
