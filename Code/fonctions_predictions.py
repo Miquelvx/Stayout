@@ -18,6 +18,19 @@ api_key = st.secrets["api_keys"]["openweathermap"]
 if 'constructors_df' in st.session_state:
     constructors_df = st.session_state['constructors_df']
 
+# Fonction chargement des données
+@st.cache_resource
+def load_qualif_session(year, round_number):
+    session = fastf1.get_session(year, round_number, 'Q')
+    session.load(laps=True, telemetry=True, weather=True, messages=False)
+    return session
+
+@st.cache_resource
+def load_race_session(year, round_number):
+    session = fastf1.get_session(year, round_number, 'R')
+    session.load(laps=False, telemetry=False, weather=False, messages=False)
+    return session
+    
 # Fonction récupération classement écurie
 def get_constructor_standings(session):
     results = session.results
@@ -83,11 +96,8 @@ def get_weather_data_after_qualif(session, api_key=None, coords=None):
 # Fonction initialisation dataframe course
 def initialize_feature_df_race(year, round_number, constructors_df):
     # 1. Chargement des sessions
-    session_race = fastf1.get_session(year, round_number, 'R')
-    session_qualif = fastf1.get_session(year, round_number, 'Q')
-
-    session_race.load(laps=True, telemetry=False, weather=True, messages=False) 
-    session_qualif.load(laps=True, telemetry=True, weather=True, messages=False)
+    session_race = load_race_session(year, round_number)
+    session_qualif = load_qualif_session(year, round_number)
     
     # 2. Récupération des résultats de course
     results_race = session_race.results.copy()
@@ -171,8 +181,7 @@ def initialize_feature_df_race(year, round_number, constructors_df):
 # Fonction initialisation dataframe qualifs
 def initialize_feature_df_qualif(year, round_number, constructors_df):
     # 1. Chargement des sessions
-    session_qualif = fastf1.get_session(year, round_number, 'Q')
-    session_qualif.load(laps=True, telemetry=True, weather=True, messages=False)
+    session_qualif = load_qualif_session(year, round_number)
     
     # 2. Récupération des résultats de qualif
     results_race = session_qualif.results.copy()
