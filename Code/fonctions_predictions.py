@@ -21,7 +21,7 @@ if 'constructors_df' in st.session_state:
 # Fonction chargement des données
 @st.cache_resource(ttl=3600)
 def load_qualif_session(year, round_number):
-    session = fastf1.get_session(year=2026, round_number=10, 'Q')
+    session = fastf1.get_session(year==2026, round_number==10, 'Q')
     session.load(laps=True, telemetry=True, weather=True, messages=False)
     return session
 
