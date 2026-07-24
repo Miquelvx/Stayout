@@ -19,13 +19,13 @@ if 'constructors_df' in st.session_state:
     constructors_df = st.session_state['constructors_df']
 
 # Fonction chargement des données
-@st.cache_resource
+@st.cache_resource(ttl=3600)
 def load_qualif_session(year, round_number):
     session = fastf1.get_session(year, round_number, 'Q')
     session.load(laps=True, telemetry=True, weather=True, messages=False)
     return session
 
-@st.cache_resource
+@st.cache_resource(ttl=3600)
 def load_race_session(year, round_number):
     session = fastf1.get_session(year, round_number, 'R')
     session.load(laps=False, telemetry=False, weather=False, messages=False)
