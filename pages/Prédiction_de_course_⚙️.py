@@ -204,6 +204,9 @@ def main():
                 mapping_last_quali = df_master[df_master['RoundNumber'] == next_event['RoundNumber']-1].set_index('Abbreviation')['qualif_pos'].to_dict()
                 df_next_gp['last_qualif_pos'] = df_next_gp['Abbreviation'].map(mapping_last_quali)
 
+                # Sécurité : pilote remplaçant / sans historique -> on utilise sa qualif du jour comme proxy
+                df_next_gp['last_qualif_pos'] = df_next_gp['last_qualif_pos'].fillna(df_next_gp['qualif_pos'])
+
                 # --- 3. Encodage des données textuelles ---
                 df_master, df_next_gp, encoders = encoding_label(df_master, df_next_gp)
 
@@ -368,6 +371,9 @@ def main():
                 mapping_last_quali = df_master[df_master['RoundNumber'] == last_event['RoundNumber']-1].set_index('Abbreviation')['qualif_pos'].to_dict()
                 df_last_gp['last_qualif_pos'] = df_last_gp['Abbreviation'].map(mapping_last_quali)
 
+                # Sécurité : même cas (remplaçant sans historique au round précédent)
+                df_last_gp['last_qualif_pos'] = df_last_gp['last_qualif_pos'].fillna(df_last_gp['qualif_pos'])
+                
                 save_to_master_db_sheet(df_last_gp)
 
             st.markdown("---")
